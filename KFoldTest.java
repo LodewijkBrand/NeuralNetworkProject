@@ -1,3 +1,13 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author Lou Brand & Matthew Dickinson
+ */
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,8 +17,10 @@ public class KFoldTest{
     private int epochs;
     private final double CONFIDENCE = .9; //95% accuracy
     private final int NUM_FOLDS = 10;
+    private double confLevel;
     
-    public KFoldTest(ArrayList<IOTuple> data, int numEpochs){
+    // GA will be used to select the genetic algorithm or normal NN
+    public KFoldTest(ArrayList<IOTuple> data, int numEpochs, boolean GA){
         epochs = numEpochs;
         myData = data; 
         Collections.shuffle(myData);
@@ -57,8 +69,12 @@ public class KFoldTest{
                 }
             }
             
-            System.out.println("Fold " + (i+1) + ", has a mean SSE of: " + sumSquaredError/(double)testSet.size());
-            System.out.println("The NeuralNetwork had a 95% confidence level " + (100.0 * (double)numRight/(double)testSet.size()) + "% of the time.");
+        //    System.out.println("Fold " + (i+1) + ", has a mean SSE of: " + sumSquaredError/(double)testSet.size());
+            confLevel = (100.0 * (double)numRight/(double)testSet.size());
+        //    System.out.println("The NeuralNetwork had a 95% confidence level " + confLevel + "% of the time.");
         }
+    }
+    public double getConfLevel(){
+        return confLevel;
     }
 }
