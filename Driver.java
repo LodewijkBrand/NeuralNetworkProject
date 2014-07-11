@@ -14,6 +14,7 @@ import java.io.*;
 
 public class Driver{
     KFoldTest myTest;
+    int EPOCHS;
     
     // delim holds either Tab or Comma, and GA will be used to determine type of NN
     public Driver (String fileName, String delim, boolean GA){
@@ -35,7 +36,7 @@ public class Driver{
             ObjectInput input = new ObjectInputStream (buffer);
             inputOutputTuples = (ArrayList<IOTuple>)input.readObject();
 
-            int EPOCHS = 500;
+            EPOCHS = 500;
             
             myTest = new KFoldTest(inputOutputTuples, EPOCHS, GA);
         }
@@ -46,6 +47,7 @@ public class Driver{
     public KFoldTest getKFoldTest(){
         return myTest;
     }
+    
 }
 
 //Testing Materials

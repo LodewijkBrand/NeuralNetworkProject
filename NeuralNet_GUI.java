@@ -15,8 +15,10 @@ import javax.swing.JFileChooser;
 public class NeuralNet_GUI extends javax.swing.JFrame {
     
     private boolean withGA = false;
+    private boolean fileChosen = false;
+    boolean cancel = false;
     
-    private class MyCustomFilter extends javax.swing.filechooser.FileFilter {
+    private class txtCustomFilter extends javax.swing.filechooser.FileFilter {
         @Override
         public boolean accept(File file) {
             // Allow only directories, or files with ".txt" extension
@@ -47,6 +49,10 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         fileChooser = new javax.swing.JFileChooser();
+        helpDialog = new javax.swing.JDialog();
+        helpInfoPane = new javax.swing.JScrollPane();
+        helpInfoTextArea = new javax.swing.JTextArea();
+        okButtonHelp = new javax.swing.JButton();
         delimiterBox = new javax.swing.JComboBox();
         delimLabel = new javax.swing.JLabel();
         selectDataButton = new javax.swing.JButton();
@@ -65,8 +71,52 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         helpMenu = new javax.swing.JMenu();
         fileFormatButton = new javax.swing.JMenuItem();
 
-        fileChooser.setDialogTitle("This is my open Dialog");
-        fileChooser.setFileFilter(new MyCustomFilter());
+        fileChooser.setDialogTitle("Select Data File");
+        fileChooser.setFileFilter(new txtCustomFilter());
+
+        helpDialog.setTitle("Data File Format");
+        helpDialog.setAlwaysOnTop(true);
+        helpDialog.setMinimumSize(new java.awt.Dimension(410, 180));
+
+        helpInfoTextArea.setEditable(false);
+        helpInfoTextArea.setColumns(20);
+        helpInfoTextArea.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
+        helpInfoTextArea.setLineWrap(true);
+        helpInfoTextArea.setRows(5);
+        helpInfoTextArea.setText("The data must be stored in a '.txt' file in the following format. For one set of input and output data, all the input values should be on the first line and delimited by either a tab or a comma. The output values are then entered on the next line and delimited by the same character (tab or comma). Subsequent input/output sets should be entered on the following lines using the same format.");
+        helpInfoTextArea.setWrapStyleWord(true);
+        helpInfoPane.setViewportView(helpInfoTextArea);
+
+        okButtonHelp.setText("OK");
+        okButtonHelp.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        okButtonHelp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okButtonHelpActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout helpDialogLayout = new javax.swing.GroupLayout(helpDialog.getContentPane());
+        helpDialog.getContentPane().setLayout(helpDialogLayout);
+        helpDialogLayout.setHorizontalGroup(
+            helpDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(helpDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(helpInfoPane)
+                .addContainerGap())
+            .addGroup(helpDialogLayout.createSequentialGroup()
+                .addGap(173, 173, 173)
+                .addComponent(okButtonHelp)
+                .addContainerGap(180, Short.MAX_VALUE))
+        );
+        helpDialogLayout.setVerticalGroup(
+            helpDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(helpDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(helpInfoPane, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+                .addComponent(okButtonHelp, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -96,6 +146,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
             }
         });
 
+        fileNameTextArea.setEditable(false);
         fileNameTextArea.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 fileNameTextAreaActionPerformed(evt);
@@ -144,6 +195,11 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         helpMenu.setText("Help");
 
         fileFormatButton.setText("Data File Format");
+        fileFormatButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fileFormatButtonActionPerformed(evt);
+            }
+        });
         helpMenu.add(fileFormatButton);
 
         jMenuBar1.add(helpMenu);
@@ -166,13 +222,13 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                     .addComponent(nnTitle)
                     .addComponent(delimiterBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(fileNameTextArea, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(63, Short.MAX_VALUE))
+                    .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(37, Short.MAX_VALUE))
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {fileNameTextArea, kFoldResultText});
-
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimLabel, executeButton, selectDataButton});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {fileNameTextArea, kFoldResultText});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -222,12 +278,19 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         int returnVal = fileChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
+            
             File file = fileChooser.getSelectedFile();
           // What to do with the file, e.g. display it in a TextArea
             fileNameTextArea.setText(file.getAbsolutePath());
-    } else {
-        System.out.println("File access cancelled by user.");
-    }
+            if (!fileNameTextArea.getText().endsWith(".txt")){
+                fileChooser.setDialogTitle("Please Select File. Must be .txt");
+                fileChosen = false;
+            }
+            else {fileChosen = true;}
+            
+        } else {
+            System.out.println("File access cancelled by user.");
+        }
     }//GEN-LAST:event_selectDataButtonActionPerformed
 
     private void nnButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nnButtonActionPerformed
@@ -238,14 +301,42 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
 
     private void executeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_executeButtonActionPerformed
         // TODO add your handling code here:
-        // Call driver and pass it the data file location, the delimiter, and ...
-        Driver execute = new Driver(fileNameTextArea.getText(), delimiterBox.getSelectedItem().toString(), withGA);
-        kFoldResultText.setText(execute.getKFoldTest().getConfLevel() + " % Confidence (K-Fold Test)");
+        
+        while (!fileChosen && !cancel){
+            fileChooser.setDialogTitle("Must Select Valid File (.txt)");
+            int returnVal = fileChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                // What to do with the file, e.g. display it in a TextArea
+                fileNameTextArea.setText(file.getAbsolutePath());
+                if (fileNameTextArea.getText().endsWith(".txt")){
+                    fileChosen = true;
+                }
+                cancel = false;
+            } else {
+                System.out.println("File access cancelled by user.");
+                cancel = true;
+            }
+        }
+        if (!cancel){
+            // Call driver and pass it the data file location, the delimiter, and the type of NN
+            Driver execute = new Driver(fileNameTextArea.getText(), delimiterBox.getSelectedItem().toString(), withGA);
+            kFoldResultText.setText(execute.getKFoldTest().getConfLevel() + " % Confidence (K-Fold Test)");
+        }
+        else {cancel = false;}
     }//GEN-LAST:event_executeButtonActionPerformed
 
     private void fileNameTextAreaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileNameTextAreaActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_fileNameTextAreaActionPerformed
+
+    private void okButtonHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonHelpActionPerformed
+        helpDialog.dispose();
+    }//GEN-LAST:event_okButtonHelpActionPerformed
+
+    private void fileFormatButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileFormatButtonActionPerformed
+        helpDialog.setVisible(true);
+    }//GEN-LAST:event_fileFormatButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -292,6 +383,9 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem fileFormatButton;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JTextField fileNameTextArea;
+    private javax.swing.JDialog helpDialog;
+    private javax.swing.JScrollPane helpInfoPane;
+    private javax.swing.JTextArea helpInfoTextArea;
     private javax.swing.JMenu helpMenu;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JTextField kFoldResultText;
@@ -300,6 +394,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private javax.swing.JLabel nnTitle;
     private javax.swing.JLabel nnTypeLabel;
     private javax.swing.JMenuItem nngaButton;
+    private javax.swing.JButton okButtonHelp;
     private javax.swing.JButton selectDataButton;
     // End of variables declaration//GEN-END:variables
 
