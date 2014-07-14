@@ -6,16 +6,24 @@
 
 import java.util.ArrayList;
 
-public class NeuralNetwork{
+public class NeuralNetwork implements Comparable<NeuralNetwork>{
     private InputLayer myInput;
     private HiddenLayer myHidden;
     private OutputLayer myOutput;
     private final double LEARNING_RATE = .7;
+    private FitnessFunction myFF;
 
     /**
     * Empty constructor
     */
     public NeuralNetwork(){}
+
+    /**
+     * Constructor for the NeuralNetwork that uses GAs to learn
+     */
+    public NeuralNetwork(FitnessFunction ff){
+        myFF = ff;
+    }
 
     /**
     * Adds a new Input and Output object into the NeuralNetwork for training and testing purposes
@@ -70,6 +78,10 @@ public class NeuralNetwork{
             double currentSum = 0.0;
             for (Synapse current : edges){
                 currentSum += current.getWeight() * current.getOrigin().getValue();
+                if (Double.isNaN(sigmoid(currentSum))){
+                    //System.out.println(currentSum);
+                    //System.out.println("Weight: " + current.getWeight() + " Origin: " + current.getOrigin().getValue());
+                }
             }
             hidden.setValue(sigmoid(currentSum));
         }
@@ -142,5 +154,52 @@ public class NeuralNetwork{
     */
     public double getCalculatedValue(){
         return myOutput.get(0).getValue();
+    }
+    
+    /**
+     * Gets all the edges in the NeuralNetwork
+     * @return All the Synapse in the NeuralNetwork
+     */
+    public ArrayList<Synapse> getEdges(){
+        ArrayList<Neuron> neurons = new ArrayList<Neuron>();
+        neurons.addAll(myInput.getNeurons());
+        neurons.addAll(myHidden.getNeurons());
+        neurons.addAll(myOutput.getNeurons());
+        ArrayList<Synapse> edges = new ArrayList<Synapse>();
+        for (Neuron current : neurons){
+            if (current.getOutputSynapses() != null){
+                for (Synapse syn : current.getOutputSynapses()){
+                    edges.add(syn);   
+                }
+            }
+        }
+        return edges;
+    }
+    
+    public InputLayer getInputLayer(){
+        return myInput;
+    }
+    
+    public HiddenLayer getHiddenLayer(){
+        return myHidden;
+    }
+    
+    public int compareTo(NeuralNetwork anotherNN){
+        Double myFitness = new Double(myFF.fitness(this));
+        Double yourFitness = new Double(myFF.fitness(anotherNN));
+        return myFitness.compareTo(yourFitness);
+    }
+    
+    /**
+     * A two stage mutation method
+     */
+    public void mutate(){
+        ArrayList<Synapse> edges = new ArrayList<Synapse>();
+        edges.addAll(myInput.getOutgoingSynapses());
+        edges.addAll(myHidden.getOutgoingSynapses());
+
+        for (Synapse edge : edges){
+            edge.mutate();
+        }
     }
 }

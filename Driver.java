@@ -21,7 +21,7 @@ public class Driver{
             KFoldTest myTest = new KFoldTest(inputOutputTuples, EPOCHS);
         }
         catch(ClassNotFoundException ex){System.out.println("The class wasn't found!");}
-        catch(IOException ex){System.out.println("There was an error!");}
+        catch(IOException ex){System.out.println("There was an error! Most likely the serialized data wasn't found!");}
 	}
 }
 

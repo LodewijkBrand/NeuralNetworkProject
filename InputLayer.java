@@ -30,4 +30,16 @@ public class InputLayer{
     public ArrayList<Neuron> getNeurons(){
         return inputNeurons;
     }
+    
+    public ArrayList<Synapse> getOutgoingSynapses(){
+        ArrayList<Synapse> outgoing = new ArrayList<Synapse>();
+        
+        for (Neuron currentNeuron : inputNeurons){
+            for (Synapse syn : currentNeuron.getOutputSynapses()){
+                outgoing.add(syn);
+            }
+        }
+        
+        return outgoing;
+    }
 }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class Neuron{
     private ArrayList<Synapse> inputs;
-    private Synapse output;
+    private ArrayList<Synapse> outputs;
     private double myValue;
     private boolean biased;
 
@@ -17,7 +17,7 @@ public class Neuron{
     */
     public Neuron(double value){
         inputs = new ArrayList<Synapse>();
-        output = null;
+        outputs = new ArrayList<Synapse>();
         setValue(value);
         biased = false;
     }
@@ -36,9 +36,9 @@ public class Neuron{
     * Creates on outgoing Synapse object (edge) from this Neuron to another Neuron
     * @param newOutput The new edge
     */
-    public void setOutput(Synapse newOutput){
+    public void addOutput(Synapse newOutput){
         if (newOutput.getOrigin() == this){
-            output = newOutput;
+            outputs.add(newOutput);
         } else {throw new IllegalArgumentException("The Synapse Origin Doesn't Match!");}
     }
 
@@ -51,11 +51,11 @@ public class Neuron{
     }
 
     /**
-    * Gets the Synapse (edge) that goes out of this Neuron
-    * @return output The outgoing Syanpse
+    * Gets the Synapses (edge) that goes out of this Neuron
+    * @return output The outgoing Syanpses
     */
-    public Synapse getOutputSynapse(){
-        return output;
+    public ArrayList<Synapse> getOutputSynapses(){
+        return outputs;
     }
 
     /**
@@ -74,8 +74,7 @@ public class Neuron{
         if (biased){
             throw new IllegalArgumentException("This Neuron is BIASED and its value cannot be changed!.");
         }
-
-        if (newValue <= 1.0 && newValue >= -1.0){
+        else if (newValue <= 1.0 && newValue >= -1.0){
             myValue = newValue;
         } else {throw new IllegalArgumentException("The value of this Neuron (" + newValue + ") is NOT valid.");}
     }

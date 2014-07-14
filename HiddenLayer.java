@@ -26,4 +26,16 @@ public class HiddenLayer{
     public ArrayList<Neuron> getNeurons(){
         return hiddenNeurons;
     }
+    
+    public ArrayList<Synapse> getOutgoingSynapses(){
+        ArrayList<Synapse> outgoing = new ArrayList<Synapse>();
+        
+        for (Neuron currentNeuron : hiddenNeurons){
+            for (Synapse syn : currentNeuron.getOutputSynapses()){
+                outgoing.add(syn);
+            }
+        }
+        
+        return outgoing;
+    }
 }
