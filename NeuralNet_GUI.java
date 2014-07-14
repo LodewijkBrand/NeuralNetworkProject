@@ -61,7 +61,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         fileNameTextArea = new javax.swing.JTextField();
         kFoldResultText = new javax.swing.JTextField();
         nnTypeLabel = new javax.swing.JLabel();
-        jMenuBar1 = new javax.swing.JMenuBar();
+        menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         nnMenu = new javax.swing.JMenu();
         nnButton = new javax.swing.JMenuItem();
@@ -120,7 +120,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        delimiterBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Comma", "Tab" }));
+        delimiterBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Tab", "Comma" }));
         delimiterBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 delimiterBoxActionPerformed(evt);
@@ -190,7 +190,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         });
         fileMenu.add(exitButton);
 
-        jMenuBar1.add(fileMenu);
+        menuBar.add(fileMenu);
 
         helpMenu.setText("Help");
 
@@ -202,9 +202,9 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         });
         helpMenu.add(fileFormatButton);
 
-        jMenuBar1.add(helpMenu);
+        menuBar.add(helpMenu);
 
-        setJMenuBar(jMenuBar1);
+        setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -223,7 +223,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                     .addComponent(delimiterBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(fileNameTextArea, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(37, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimLabel, executeButton, selectDataButton});
@@ -249,7 +249,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(executeButton))
-                .addContainerGap(78, Short.MAX_VALUE))
+                .addContainerGap(46, Short.MAX_VALUE))
         );
 
         layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {delimLabel, executeButton, nnTypeLabel, selectDataButton});
@@ -387,8 +387,8 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane helpInfoPane;
     private javax.swing.JTextArea helpInfoTextArea;
     private javax.swing.JMenu helpMenu;
-    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JTextField kFoldResultText;
+    private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem nnButton;
     private javax.swing.JMenu nnMenu;
     private javax.swing.JLabel nnTitle;
