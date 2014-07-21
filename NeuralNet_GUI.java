@@ -1,7 +1,5 @@
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import javax.swing.JFileChooser;
 
 /*
@@ -12,10 +10,15 @@ import javax.swing.JFileChooser;
 
 /**
  *
- * @author mhd57_000
+ * @author Matthew Dickinson
  */
 public class NeuralNet_GUI extends javax.swing.JFrame {
-    private class MyCustomFilter extends javax.swing.filechooser.FileFilter {
+    
+    private boolean withGA = false;
+    private boolean fileChosen = false;
+    boolean cancel = false;
+    
+    private class txtCustomFilter extends javax.swing.filechooser.FileFilter {
         @Override
         public boolean accept(File file) {
             // Allow only directories, or files with ".txt" extension
@@ -46,12 +49,21 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         fileChooser = new javax.swing.JFileChooser();
+        helpDialog = new javax.swing.JDialog();
+        helpInfoPane = new javax.swing.JScrollPane();
+        helpInfoTextArea = new javax.swing.JTextArea();
+        okButtonHelp = new javax.swing.JButton();
         delimiterBox = new javax.swing.JComboBox();
         delimLabel = new javax.swing.JLabel();
         selectDataButton = new javax.swing.JButton();
-        fileNameScrollPane = new javax.swing.JScrollPane();
-        fileNameTextArea = new javax.swing.JTextArea();
-        jMenuBar1 = new javax.swing.JMenuBar();
+        nnTitle = new javax.swing.JLabel();
+        executeButton = new javax.swing.JButton();
+        fileNameTextArea = new javax.swing.JTextField();
+        kFoldResultText = new javax.swing.JTextField();
+        nnTypeLabel = new javax.swing.JLabel();
+        learnRateLabel = new javax.swing.JLabel();
+        learnRateTextField = new javax.swing.JTextField();
+        menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         nnMenu = new javax.swing.JMenu();
         nnButton = new javax.swing.JMenuItem();
@@ -61,18 +73,63 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         helpMenu = new javax.swing.JMenu();
         fileFormatButton = new javax.swing.JMenuItem();
 
-        fileChooser.setDialogTitle("This is my open Dialog");
-        fileChooser.setFileFilter(new MyCustomFilter());
+        fileChooser.setDialogTitle("Select Data File");
+        fileChooser.setFileFilter(new txtCustomFilter());
+
+        helpDialog.setTitle("Data File Format");
+        helpDialog.setAlwaysOnTop(true);
+        helpDialog.setMinimumSize(new java.awt.Dimension(410, 180));
+
+        helpInfoTextArea.setEditable(false);
+        helpInfoTextArea.setColumns(20);
+        helpInfoTextArea.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
+        helpInfoTextArea.setLineWrap(true);
+        helpInfoTextArea.setRows(5);
+        helpInfoTextArea.setText("The data must be stored in a '.txt' file in the following format. For one set of input and output data, all the input values should be on the first line and delimited by either a tab or a comma. The output values are then entered on the next line and delimited by the same character (tab or comma). Subsequent input/output sets should be entered on the following lines using the same format.");
+        helpInfoTextArea.setWrapStyleWord(true);
+        helpInfoPane.setViewportView(helpInfoTextArea);
+
+        okButtonHelp.setText("OK");
+        okButtonHelp.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        okButtonHelp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okButtonHelpActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout helpDialogLayout = new javax.swing.GroupLayout(helpDialog.getContentPane());
+        helpDialog.getContentPane().setLayout(helpDialogLayout);
+        helpDialogLayout.setHorizontalGroup(
+            helpDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(helpDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(helpInfoPane)
+                .addContainerGap())
+            .addGroup(helpDialogLayout.createSequentialGroup()
+                .addGap(173, 173, 173)
+                .addComponent(okButtonHelp)
+                .addContainerGap(180, Short.MAX_VALUE))
+        );
+        helpDialogLayout.setVerticalGroup(
+            helpDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(helpDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(helpInfoPane, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+                .addComponent(okButtonHelp, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        delimiterBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Comma", "Tab" }));
+        delimiterBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Tab", "Comma" }));
         delimiterBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 delimiterBoxActionPerformed(evt);
             }
         });
 
+        delimLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         delimLabel.setText("Delimitter");
 
         selectDataButton.setText("Select Data Set");
@@ -82,15 +139,47 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
             }
         });
 
-        fileNameTextArea.setColumns(20);
-        fileNameTextArea.setRows(5);
-        fileNameScrollPane.setViewportView(fileNameTextArea);
+        nnTitle.setText("Simple Neural Network");
+
+        executeButton.setText("Execute");
+        executeButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                executeButtonActionPerformed(evt);
+            }
+        });
+
+        fileNameTextArea.setEditable(false);
+        fileNameTextArea.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fileNameTextAreaActionPerformed(evt);
+            }
+        });
+
+        kFoldResultText.setEditable(false);
+        kFoldResultText.setText("% Confidence");
+
+        nnTypeLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        nnTypeLabel.setText("Neural Network Type");
+
+        learnRateLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        learnRateLabel.setText("Learning Rate");
+
+        learnRateTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                learnRateTextFieldActionPerformed(evt);
+            }
+        });
 
         fileMenu.setText("File");
 
         nnMenu.setText("Neural Network Type");
 
         nnButton.setText("Simple NN");
+        nnButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                nnButtonActionPerformed(evt);
+            }
+        });
         nnMenu.add(nnButton);
 
         nngaButton.setText("NN w/ Genetic Algorithm");
@@ -114,16 +203,21 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         });
         fileMenu.add(exitButton);
 
-        jMenuBar1.add(fileMenu);
+        menuBar.add(fileMenu);
 
         helpMenu.setText("Help");
 
         fileFormatButton.setText("Data File Format");
+        fileFormatButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fileFormatButtonActionPerformed(evt);
+            }
+        });
         helpMenu.add(fileFormatButton);
 
-        jMenuBar1.add(helpMenu);
+        menuBar.add(helpMenu);
 
-        setJMenuBar(jMenuBar1);
+        setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -133,37 +227,71 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(delimLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(delimiterBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(delimLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(nnTypeLabel))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(nnTitle)
+                            .addComponent(delimiterBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(selectDataButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(fileNameScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(49, Short.MAX_VALUE))
+                        .addComponent(learnRateLabel)
+                        .addGap(18, 18, 18)
+                        .addComponent(learnRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(selectDataButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
+                        .addComponent(fileNameTextArea, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(executeButton)
+                        .addGap(18, 18, 18)
+                        .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimLabel, selectDataButton});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimLabel, executeButton, learnRateLabel, nnTypeLabel, selectDataButton});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {fileNameTextArea, kFoldResultText});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimiterBox, learnRateTextField});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(nnTitle)
+                    .addComponent(nnTypeLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(delimiterBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(delimLabel))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(learnRateLabel)
+                    .addComponent(learnRateTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(selectDataButton)
-                    .addComponent(fileNameScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(125, Short.MAX_VALUE))
+                    .addComponent(fileNameTextArea, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(executeButton)
+                    .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {delimLabel, executeButton, learnRateLabel, nnTypeLabel, selectDataButton});
+
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {delimiterBox, fileNameTextArea, kFoldResultText, learnRateTextField, nnTitle});
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void nngaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nngaButtonActionPerformed
         // TODO add your handling code here:
+        nnTitle.setText("Neural Networks Employing Genetic Algorithms");
+        withGA = true;
     }//GEN-LAST:event_nngaButtonActionPerformed
 
     private void delimiterBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_delimiterBoxActionPerformed
@@ -179,17 +307,70 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         int returnVal = fileChooser.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
+            
             File file = fileChooser.getSelectedFile();
-        try {
           // What to do with the file, e.g. display it in a TextArea
-            fileNameTextArea.read( new FileReader( file.getAbsolutePath() ), null );
-        } catch (IOException ex) {
-            System.out.println("problem accessing file"+file.getAbsolutePath());
+            fileNameTextArea.setText(file.getAbsolutePath());
+            if (!fileNameTextArea.getText().endsWith(".txt")){
+                fileChooser.setDialogTitle("Please Select File. Must be .txt");
+                fileChosen = false;
+            }
+            else {fileChosen = true;}
+            
+        } else {
+            System.out.println("File access cancelled by user.");
         }
-    } else {
-        System.out.println("File access cancelled by user.");
-    }
     }//GEN-LAST:event_selectDataButtonActionPerformed
+
+    private void nnButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nnButtonActionPerformed
+        // TODO add your handling code here:
+        nnTitle.setText("Simple Neural Network");
+        withGA = false;
+    }//GEN-LAST:event_nnButtonActionPerformed
+
+    private void executeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_executeButtonActionPerformed
+        // TODO add your handling code here:
+        
+        while (!fileChosen && !cancel){
+            fileChooser.setDialogTitle("Must Select Valid File (.txt)");
+            int returnVal = fileChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                // What to do with the file, e.g. display it in a TextArea
+                fileNameTextArea.setText(file.getAbsolutePath());
+                if (fileNameTextArea.getText().endsWith(".txt")){
+                    fileChosen = true;
+                }
+                cancel = false;
+            } else {
+                System.out.println("File access cancelled by user.");
+                cancel = true;
+            }
+        }
+        if (!cancel){
+            // Call driver and pass it the necessary data
+            double learnRate = Double.parseDouble(learnRateTextField.getText());
+            Driver execute = new Driver(fileNameTextArea.getText(), delimiterBox.getSelectedItem().toString(), withGA,learnRate);
+            kFoldResultText.setText(execute.getKFoldTest().getConfLevel() + " % Confidence");
+        }
+        else {cancel = false;}
+    }//GEN-LAST:event_executeButtonActionPerformed
+
+    private void fileNameTextAreaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileNameTextAreaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fileNameTextAreaActionPerformed
+
+    private void okButtonHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonHelpActionPerformed
+        helpDialog.dispose();
+    }//GEN-LAST:event_okButtonHelpActionPerformed
+
+    private void fileFormatButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileFormatButtonActionPerformed
+        helpDialog.setVisible(true);
+    }//GEN-LAST:event_fileFormatButtonActionPerformed
+
+    private void learnRateTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_learnRateTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_learnRateTextFieldActionPerformed
 
     /**
      * @param args the command line arguments
@@ -230,17 +411,26 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private javax.swing.JMenuItem compareButton;
     private javax.swing.JLabel delimLabel;
     private javax.swing.JComboBox delimiterBox;
+    private javax.swing.JButton executeButton;
     private javax.swing.JMenuItem exitButton;
     private javax.swing.JFileChooser fileChooser;
     private javax.swing.JMenuItem fileFormatButton;
     private javax.swing.JMenu fileMenu;
-    private javax.swing.JScrollPane fileNameScrollPane;
-    private javax.swing.JTextArea fileNameTextArea;
+    private javax.swing.JTextField fileNameTextArea;
+    private javax.swing.JDialog helpDialog;
+    private javax.swing.JScrollPane helpInfoPane;
+    private javax.swing.JTextArea helpInfoTextArea;
     private javax.swing.JMenu helpMenu;
-    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JTextField kFoldResultText;
+    private javax.swing.JLabel learnRateLabel;
+    private javax.swing.JTextField learnRateTextField;
+    private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem nnButton;
     private javax.swing.JMenu nnMenu;
+    private javax.swing.JLabel nnTitle;
+    private javax.swing.JLabel nnTypeLabel;
     private javax.swing.JMenuItem nngaButton;
+    private javax.swing.JButton okButtonHelp;
     private javax.swing.JButton selectDataButton;
     // End of variables declaration//GEN-END:variables
 

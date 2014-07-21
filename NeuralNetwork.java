@@ -10,12 +10,14 @@ public class NeuralNetwork{
     private InputLayer myInput;
     private HiddenLayer myHidden;
     private OutputLayer myOutput;
-    private final double LEARNING_RATE = .7;
+    private double LEARNING_RATE;
 
     /**
     * Empty constructor
     */
-    public NeuralNetwork(){}
+    public NeuralNetwork(double learnRate){
+        LEARNING_RATE = learnRate;
+    }
 
     /**
     * Adds a new Input and Output object into the NeuralNetwork for training and testing purposes

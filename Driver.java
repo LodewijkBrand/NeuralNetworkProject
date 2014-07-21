@@ -1,14 +1,34 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 /**
  * The main Driver method of the Neural Network
- * @author Lou Brand
+ * @author Lou Brand & Matthew Dickinson
  */
 
 import java.util.ArrayList;
 import java.io.*;
 
 public class Driver{
-	public static void main (String[] args){
+    KFoldTest myTest;
+    int EPOCHS;
+    
+    // delim holds either Tab or Comma, and GA will be used to determine type of NN
+    public Driver (String fileName, String delim, boolean GA, double LR){
         ArrayList<IOTuple> inputOutputTuples;
+        String delimiter;
+        
+        if (delim == "Tab"){
+            delimiter = "\t";
+        }
+        else {
+            delimiter = ",";
+        }
+        
+        Parser test = new Parser(fileName, delimiter);
         
         try{
             InputStream file = new FileInputStream("myData.ser");
@@ -16,13 +36,18 @@ public class Driver{
             ObjectInput input = new ObjectInputStream (buffer);
             inputOutputTuples = (ArrayList<IOTuple>)input.readObject();
 
-            int EPOCHS = 500;
+            EPOCHS = 500;
             
-            KFoldTest myTest = new KFoldTest(inputOutputTuples, EPOCHS);
+            myTest = new KFoldTest(inputOutputTuples, EPOCHS, GA, LR);
         }
         catch(ClassNotFoundException ex){System.out.println("The class wasn't found!");}
         catch(IOException ex){System.out.println("There was an error!");}
-	}
+    }
+    
+    public KFoldTest getKFoldTest(){
+        return myTest;
+    }
+    
 }
 
 //Testing Materials
