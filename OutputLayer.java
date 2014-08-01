@@ -1,3 +1,9 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 /**
  * An object that represents the OutputLayer of Neurons in our NeuralNetwork
  * @author Lou Brand
@@ -5,7 +11,7 @@
 
 import java.util.ArrayList;
 
-public class OutputLayer{
+public class OutputLayer implements java.io.Serializable{
     ArrayList<Double> expectedOutput;
     ArrayList<Neuron> outputNeurons;
 

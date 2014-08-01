@@ -5,7 +5,7 @@
 
 import java.util.Random;
 
-public class Synapse{
+public class Synapse implements java.io.Serializable{
     private double weight;
     private Neuron origin, destination;
 

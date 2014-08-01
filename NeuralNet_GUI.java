@@ -1,5 +1,13 @@
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import javax.swing.JFileChooser;
 
 /*
@@ -14,10 +22,16 @@ import javax.swing.JFileChooser;
  */
 public class NeuralNet_GUI extends javax.swing.JFrame {
     
-    private boolean withGA = false;
-    private boolean fileChosen = false;
-    boolean cancel = false;
+    private boolean withGA = false;         // Will indicate if genetic algorithms are to be used. Not implemented yet
+    private boolean fileChosen = false;     // Used to see if a file was chosen
+    private boolean fileNameValid = false;  // Used to see if save name is valid
+    private boolean executeTraining = true; // Default open screen is training
+    private boolean validNN;                // Used to see if a valid network has been chosen and loaded
+    private Driver currentDriver;
+    private String nnFileName;
+
     
+    // Code for txt custom filter from online example
     private class txtCustomFilter extends javax.swing.filechooser.FileFilter {
         @Override
         public boolean accept(File file) {
@@ -29,6 +43,20 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
             // This description will be displayed in the dialog,
             // hard-coded = ugly, should be done via I18N
             return "Text documents (*.txt)";
+        }
+    }
+    
+    private class serCustomFilter extends javax.swing.filechooser.FileFilter {
+        @Override
+        public boolean accept(File file) {
+            // Allow only directories, or files with ".txt" extension
+            return file.isDirectory() || file.getAbsolutePath().endsWith(".ser");
+        }
+        @Override
+        public String getDescription() {
+            // This description will be displayed in the dialog,
+            // hard-coded = ugly, should be done via I18N
+            return "Serialized files (*.ser)";
         }
     }
     
@@ -48,18 +76,29 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        fileChooser = new javax.swing.JFileChooser();
+        fileChooserData = new javax.swing.JFileChooser();
         helpDialog = new javax.swing.JDialog();
         helpInfoPane = new javax.swing.JScrollPane();
         helpInfoTextArea = new javax.swing.JTextArea();
         okButtonHelp = new javax.swing.JButton();
+        saveNetworkDialog = new javax.swing.JDialog();
+        saveNetPane = new javax.swing.JScrollPane();
+        saveNetTextArea = new javax.swing.JTextArea();
+        yesSaveButton = new javax.swing.JButton();
+        noSaveButton = new javax.swing.JButton();
+        netNameDialog = new javax.swing.JDialog();
+        nnFileNameTextField = new javax.swing.JTextField();
+        nnFileNameLabel = new javax.swing.JLabel();
+        nnSaveInfoLabel = new javax.swing.JLabel();
+        okSaveNNButton = new javax.swing.JButton();
+        fileChooserNN = new javax.swing.JFileChooser();
         delimiterBox = new javax.swing.JComboBox();
         delimLabel = new javax.swing.JLabel();
         selectDataButton = new javax.swing.JButton();
-        nnTitle = new javax.swing.JLabel();
+        nnType = new javax.swing.JLabel();
         executeButton = new javax.swing.JButton();
         fileNameTextArea = new javax.swing.JTextField();
-        kFoldResultText = new javax.swing.JTextField();
+        resultTextField = new javax.swing.JTextField();
         nnTypeLabel = new javax.swing.JLabel();
         learnRateLabel = new javax.swing.JLabel();
         learnRateTextField = new javax.swing.JTextField();
@@ -69,16 +108,18 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         nnButton = new javax.swing.JMenuItem();
         nngaButton = new javax.swing.JMenuItem();
         compareButton = new javax.swing.JMenuItem();
+        useNNButton = new javax.swing.JMenuItem();
         exitButton = new javax.swing.JMenuItem();
         helpMenu = new javax.swing.JMenu();
         fileFormatButton = new javax.swing.JMenuItem();
 
-        fileChooser.setDialogTitle("Select Data File");
-        fileChooser.setFileFilter(new txtCustomFilter());
+        fileChooserData.setDialogTitle("Select Data File");
+        fileChooserData.setFileFilter(new txtCustomFilter());
 
         helpDialog.setTitle("Data File Format");
         helpDialog.setAlwaysOnTop(true);
-        helpDialog.setMinimumSize(new java.awt.Dimension(410, 180));
+        helpDialog.setMinimumSize(new java.awt.Dimension(400, 189));
+        helpDialog.setResizable(false);
 
         helpInfoTextArea.setEditable(false);
         helpInfoTextArea.setColumns(20);
@@ -120,7 +161,122 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        saveNetworkDialog.setTitle("Save Neural Network");
+        saveNetworkDialog.setAlwaysOnTop(true);
+        saveNetworkDialog.setMinimumSize(new java.awt.Dimension(190, 217));
+        saveNetworkDialog.setResizable(false);
+
+        saveNetTextArea.setEditable(false);
+        saveNetTextArea.setColumns(20);
+        saveNetTextArea.setFont(new java.awt.Font("Times New Roman", 0, 12)); // NOI18N
+        saveNetTextArea.setLineWrap(true);
+        saveNetTextArea.setRows(5);
+        saveNetTextArea.setText("This data set yielded networks that on average were within 5 % of the desired output _ % of the time. The best network achieved this _ % of the time. Do you wish to save the best network for later use?");
+        saveNetTextArea.setWrapStyleWord(true);
+        saveNetTextArea.setAutoscrolls(false);
+        saveNetPane.setViewportView(saveNetTextArea);
+
+        yesSaveButton.setText("Yes");
+        yesSaveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                yesSaveButtonActionPerformed(evt);
+            }
+        });
+
+        noSaveButton.setText("No");
+        noSaveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                noSaveButtonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout saveNetworkDialogLayout = new javax.swing.GroupLayout(saveNetworkDialog.getContentPane());
+        saveNetworkDialog.getContentPane().setLayout(saveNetworkDialogLayout);
+        saveNetworkDialogLayout.setHorizontalGroup(
+            saveNetworkDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(saveNetworkDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(saveNetworkDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(saveNetworkDialogLayout.createSequentialGroup()
+                        .addComponent(saveNetPane, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(saveNetworkDialogLayout.createSequentialGroup()
+                        .addComponent(yesSaveButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(noSaveButton)))
+                .addContainerGap())
+        );
+        saveNetworkDialogLayout.setVerticalGroup(
+            saveNetworkDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(saveNetworkDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(saveNetPane, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(saveNetworkDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(noSaveButton)
+                    .addComponent(yesSaveButton))
+                .addContainerGap())
+        );
+
+        netNameDialog.setTitle("Choose File Name");
+        netNameDialog.setAlwaysOnTop(true);
+        netNameDialog.setMinimumSize(new java.awt.Dimension(228, 135));
+        netNameDialog.setModal(true);
+        netNameDialog.setResizable(false);
+
+        nnFileNameLabel.setText("File Name:");
+
+        nnSaveInfoLabel.setText("Network will be saved in filename.ser");
+
+        okSaveNNButton.setText("OK");
+        okSaveNNButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        okSaveNNButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okSaveNNButtonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout netNameDialogLayout = new javax.swing.GroupLayout(netNameDialog.getContentPane());
+        netNameDialog.getContentPane().setLayout(netNameDialogLayout);
+        netNameDialogLayout.setHorizontalGroup(
+            netNameDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(netNameDialogLayout.createSequentialGroup()
+                .addGroup(netNameDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(netNameDialogLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(netNameDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(netNameDialogLayout.createSequentialGroup()
+                                .addComponent(nnFileNameLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(nnFileNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(nnSaveInfoLabel)))
+                    .addGroup(netNameDialogLayout.createSequentialGroup()
+                        .addGap(71, 71, 71)
+                        .addComponent(okSaveNNButton)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        netNameDialogLayout.setVerticalGroup(
+            netNameDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(netNameDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(netNameDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(nnFileNameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(nnFileNameLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(nnSaveInfoLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
+                .addComponent(okSaveNNButton)
+                .addContainerGap())
+        );
+
+        netNameDialogLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {nnFileNameLabel, nnFileNameTextField, nnSaveInfoLabel});
+
+        fileChooserNN.setDialogTitle("Select Data File");
+        fileChooserNN.setFileFilter(new serCustomFilter());
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("DB Neural Networks");
+        setMinimumSize(new java.awt.Dimension(431, 207));
 
         delimiterBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Tab", "Comma" }));
         delimiterBox.addActionListener(new java.awt.event.ActionListener() {
@@ -132,14 +288,14 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         delimLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         delimLabel.setText("Delimitter");
 
-        selectDataButton.setText("Select Data Set");
+        selectDataButton.setText("Select Data File");
         selectDataButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 selectDataButtonActionPerformed(evt);
             }
         });
 
-        nnTitle.setText("Simple Neural Network");
+        nnType.setText("Simple Neural Network");
 
         executeButton.setText("Execute");
         executeButton.addActionListener(new java.awt.event.ActionListener() {
@@ -155,8 +311,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
             }
         });
 
-        kFoldResultText.setEditable(false);
-        kFoldResultText.setText("% Confidence");
+        resultTextField.setEditable(false);
 
         nnTypeLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         nnTypeLabel.setText("Neural Network Type");
@@ -164,6 +319,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         learnRateLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         learnRateLabel.setText("Learning Rate");
 
+        learnRateTextField.setText("0.7");
         learnRateTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 learnRateTextFieldActionPerformed(evt);
@@ -194,6 +350,14 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
 
         compareButton.setText("Comparison");
         fileMenu.add(compareButton);
+
+        useNNButton.setText("Use Neural Network");
+        useNNButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                useNNButtonActionPerformed(evt);
+            }
+        });
+        fileMenu.add(useNNButton);
 
         exitButton.setText("Exit");
         exitButton.addActionListener(new java.awt.event.ActionListener() {
@@ -232,7 +396,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                             .addComponent(nnTypeLabel))
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(nnTitle)
+                            .addComponent(nnType)
                             .addComponent(delimiterBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(learnRateLabel)
@@ -245,13 +409,13 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(executeButton)
                         .addGap(18, 18, 18)
-                        .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(resultTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimLabel, executeButton, learnRateLabel, nnTypeLabel, selectDataButton});
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {fileNameTextArea, kFoldResultText});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {fileNameTextArea, resultTextField});
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {delimiterBox, learnRateTextField});
 
@@ -260,7 +424,7 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(nnTitle)
+                    .addComponent(nnType)
                     .addComponent(nnTypeLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -277,20 +441,20 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(executeButton)
-                    .addComponent(kFoldResultText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(resultTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {delimLabel, executeButton, learnRateLabel, nnTypeLabel, selectDataButton});
 
-        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {delimiterBox, fileNameTextArea, kFoldResultText, learnRateTextField, nnTitle});
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {delimiterBox, fileNameTextArea, learnRateTextField, nnType, resultTextField});
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void nngaButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nngaButtonActionPerformed
-        // TODO add your handling code here:
-        nnTitle.setText("Neural Networks Employing Genetic Algorithms");
+        // Switch the type title and change withGA accordingly
+        nnType.setText("Neural Networks Employing Genetic Algorithms");
         withGA = true;
     }//GEN-LAST:event_nngaButtonActionPerformed
 
@@ -299,20 +463,22 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_delimiterBoxActionPerformed
 
     private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
-        // TODO add your handling code here:
+       
         System.exit(0);
     }//GEN-LAST:event_exitButtonActionPerformed
 
     private void selectDataButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectDataButtonActionPerformed
-        // TODO add your handling code here:
-        int returnVal = fileChooser.showOpenDialog(this);
+        
+        // Code for this action based on online source
+        int returnVal = fileChooserData.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             
-            File file = fileChooser.getSelectedFile();
-          // What to do with the file, e.g. display it in a TextArea
+            File file = fileChooserData.getSelectedFile();
+            // display file in text area
             fileNameTextArea.setText(file.getAbsolutePath());
+            //Ensure a proper file was chosen
             if (!fileNameTextArea.getText().endsWith(".txt")){
-                fileChooser.setDialogTitle("Please Select File. Must be .txt");
+                fileChooserData.setDialogTitle("Please Select File. Must be .txt");
                 fileChosen = false;
             }
             else {fileChosen = true;}
@@ -323,37 +489,57 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_selectDataButtonActionPerformed
 
     private void nnButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nnButtonActionPerformed
-        // TODO add your handling code here:
-        nnTitle.setText("Simple Neural Network");
+        // Switch the type title and change withGA accordingly
+        nnType.setText("Simple Neural Network");
         withGA = false;
     }//GEN-LAST:event_nnButtonActionPerformed
 
     private void executeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_executeButtonActionPerformed
-        // TODO add your handling code here:
-        
+        boolean cancel = false;
+        // Loop until a data file is chosen or execute is cancelled
         while (!fileChosen && !cancel){
-            fileChooser.setDialogTitle("Must Select Valid File (.txt)");
-            int returnVal = fileChooser.showOpenDialog(this);
+            fileChooserData.setDialogTitle("Must Select Valid File (.txt)");
+            // showOpenDialog returns a specific value depending on user-selected file
+            int returnVal = fileChooserData.showOpenDialog(this);
+           
             if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                // What to do with the file, e.g. display it in a TextArea
+                File file = fileChooserData.getSelectedFile();
+                // display file name in text area
                 fileNameTextArea.setText(file.getAbsolutePath());
+               
+                // make fileChosen true if a valid file is chosen
                 if (fileNameTextArea.getText().endsWith(".txt")){
                     fileChosen = true;
                 }
-                cancel = false;
+                
             } else {
                 System.out.println("File access cancelled by user.");
                 cancel = true;
+                fileChosen = false;
             }
         }
-        if (!cancel){
+        
+        // Continue with execute as long as a file is chosen
+        // Execute training code if executeTraining is true, otherwise test a sample
+        if (fileChosen && executeTraining){
             // Call driver and pass it the necessary data
-            double learnRate = Double.parseDouble(learnRateTextField.getText());
-            Driver execute = new Driver(fileNameTextArea.getText(), delimiterBox.getSelectedItem().toString(), withGA,learnRate);
-            kFoldResultText.setText(execute.getKFoldTest().getConfLevel() + " % Confidence");
+            currentDriver = new Driver(fileNameTextArea.getText(), delimiterBox.getSelectedItem().toString(), withGA);
+            currentDriver.trainNetwork(Double.parseDouble(learnRateTextField.getText()));
+           
+            // Display average confidence level in main window
+            resultTextField.setText(Math.round(currentDriver.getKFoldTest().getAvgConfLevel()*100.0)/100.0 + " % Confidence");
+           
+            // Pop-up to determine if user wants to save the network for later use
+            saveNetTextArea.setText("This data set yielded networks that on average were within 5 % of the desired output " + Math.round(currentDriver.getKFoldTest().getAvgConfLevel()*100.0)/100.0 + " % of the time. The best network achieved this " + Math.round(currentDriver.getKFoldTest().getBestConfLevel()*100.0)/100.0 + " % of the time. Do you wish to save the best network for later use?");
+            saveNetworkDialog.setVisible(true);
         }
-        else {cancel = false;}
+        // Test sample
+        else if (fileChosen && !executeTraining){
+            currentDriver.testSample(fileNameTextArea.getText(),delimiterBox.getSelectedItem().toString());
+            // Display output
+            Double outputValue = currentDriver.getSampleOutput();
+            resultTextField.setText("Output: " + Double.toString(outputValue));
+        }
     }//GEN-LAST:event_executeButtonActionPerformed
 
     private void fileNameTextAreaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileNameTextAreaActionPerformed
@@ -372,6 +558,156 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_learnRateTextFieldActionPerformed
 
+    private void noSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_noSaveButtonActionPerformed
+
+        saveNetworkDialog.dispose();
+    }//GEN-LAST:event_noSaveButtonActionPerformed
+
+    private void yesSaveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_yesSaveButtonActionPerformed
+        // Display a dialog so user can input file name
+        netNameDialog.setVisible(true);
+        
+        // If a valid file name was entered, serialize the driver in that file
+        if (fileNameValid){
+            try{
+                String serial = nnFileName.concat(".ser");
+                FileOutputStream fileOut = new FileOutputStream(serial);
+                ObjectOutputStream out = new ObjectOutputStream(fileOut);
+                out.writeObject(currentDriver);
+                out.close();
+                fileOut.close();
+                System.out.println("Driver data is saved in " + serial);
+                // Remove dialog for saving the network
+                saveNetworkDialog.dispose();
+            }catch(IOException i){i.printStackTrace();}
+            // Reset the boolean
+            fileNameValid = false;
+        }
+    }//GEN-LAST:event_yesSaveButtonActionPerformed
+
+    private void okSaveNNButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okSaveNNButtonActionPerformed
+        String fileName = nnFileNameTextField.getText();
+        // Make sure no illegal characters are used and that the name isn't blank
+        if(fileName.equals("") || fileName.contains("/") || fileName.contains("\\") || fileName.contains("?") || fileName.contains("<") || fileName.contains(">") || fileName.contains(":") || fileName.contains("*") || fileName.contains("|") || fileName.contains("\"")){
+            netNameDialog.setTitle("Invalid File Name");
+            nnFileNameTextField.setText("");
+        }
+        else{
+            nnFileName = nnFileNameTextField.getText();
+            // Remove dialog box
+            netNameDialog.dispose();
+            fileNameValid = true;
+        }
+    }//GEN-LAST:event_okSaveNNButtonActionPerformed
+    
+    // This button switches between training and using a network
+    private void useNNButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_useNNButtonActionPerformed
+        // Flip executeTraining accordingly
+        executeTraining = !executeTraining;
+        if (executeTraining){
+            loadToTrain();
+        }
+        else{trainToLoad();}
+
+    }//GEN-LAST:event_useNNButtonActionPerformed
+    
+    public void loadToTrain(){
+        changeButtonStates();
+        // Change the other labels and restore default condition
+        useNNButton.setText("Use Neural Network");
+        learnRateTextField.setText("0.7");
+        nnTypeLabel.setText("Neural Network Type");
+        nnType.setText("Simple Neural Network");
+        withGA = false;
+    }
+    
+    public void trainToLoad(){
+        validNN = false;
+        String fileLocation = null;
+        
+        // Open file chooser with .ser restriction and receive input
+        fileChooserNN.setDialogTitle("Please Select Saved Network");
+        int returnVal = fileChooserNN.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            
+            File file = fileChooserNN.getSelectedFile();
+            fileLocation = file.getAbsolutePath();
+            if (!fileLocation.endsWith(".ser")){
+                fileChooserNN.setDialogTitle("Please Select File. Must be .ser");
+            }
+            else{validNN = true;}
+        } else {
+            //
+            executeTraining = true;
+            System.out.println("File access cancelled by user.");
+        }
+
+        // If a valid file was selected, continue with deserialization
+        if(validNN){
+            // loadNN will change the state of validNN depending on the result of deserializing
+            loadNN(fileLocation);
+        }
+
+        // If loading the driver was successful, change the program accordingly
+        if(validNN){
+            changeButtonStates();
+            // Change other buttons and labels
+            useNNButton.setText("Train Neural Network");
+            // Learn rate is now held at value of the loaded network
+            learnRateTextField.setText(Double.toString(currentDriver.getKFoldTest().getBestNN().getLR()));
+            
+            // Change the network type label to hold the name of the file
+            nnTypeLabel.setText(fileLocation.substring(fileLocation.lastIndexOf("\\") + 1,fileLocation.length() - 4)+ " Network Type");
+            
+            // Change the type of network to the type stored in the file
+            if (currentDriver.getKFoldTest().getBestNN().getGA()){
+                withGA = true;
+                nnType.setText("Neural Networks Using Genetic Algorithms");
+            }
+            else{
+                withGA = false;
+                nnType.setText("Simple Neural Network");
+            }
+        }
+    }
+    public void loadNN(String fileLocation){
+        // Reset validNN for new test
+        validNN = false;
+        
+        // Attempt to deserialize the driver
+        try{
+            InputStream inFile = new FileInputStream(fileLocation);
+            InputStream buffer = new BufferedInputStream(inFile);
+            ObjectInput input = new ObjectInputStream (buffer);
+           // System.out.println("before readObject");
+            currentDriver = (Driver)input.readObject();
+           // System.out.println("after readObject");
+            validNN = true;
+        }
+        catch(ClassNotFoundException ex){
+            // If this fails, flip execute training back to true
+            executeTraining = true;
+            System.out.println("The class wasn't found!");
+        }
+        catch(IOException ex){
+            // If this fails, flip execute training back to true
+            executeTraining = true;
+            System.out.println("There was an error!");
+        }        
+    }
+    
+    // Changes the states of several buttons
+    public void changeButtonStates(){
+        compareButton.setVisible(!compareButton.isVisible());
+        nnMenu.setVisible(!nnMenu.isVisible());
+        
+        learnRateTextField.setEditable(!learnRateTextField.isEditable());
+        
+        fileNameTextArea.setText("");
+        
+        resultTextField.setText("");
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -413,7 +749,8 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private javax.swing.JComboBox delimiterBox;
     private javax.swing.JButton executeButton;
     private javax.swing.JMenuItem exitButton;
-    private javax.swing.JFileChooser fileChooser;
+    private javax.swing.JFileChooser fileChooserData;
+    private javax.swing.JFileChooser fileChooserNN;
     private javax.swing.JMenuItem fileFormatButton;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JTextField fileNameTextArea;
@@ -421,17 +758,28 @@ public class NeuralNet_GUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane helpInfoPane;
     private javax.swing.JTextArea helpInfoTextArea;
     private javax.swing.JMenu helpMenu;
-    private javax.swing.JTextField kFoldResultText;
     private javax.swing.JLabel learnRateLabel;
     private javax.swing.JTextField learnRateTextField;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JDialog netNameDialog;
     private javax.swing.JMenuItem nnButton;
+    private javax.swing.JLabel nnFileNameLabel;
+    private javax.swing.JTextField nnFileNameTextField;
     private javax.swing.JMenu nnMenu;
-    private javax.swing.JLabel nnTitle;
+    private javax.swing.JLabel nnSaveInfoLabel;
+    private javax.swing.JLabel nnType;
     private javax.swing.JLabel nnTypeLabel;
     private javax.swing.JMenuItem nngaButton;
+    private javax.swing.JButton noSaveButton;
     private javax.swing.JButton okButtonHelp;
+    private javax.swing.JButton okSaveNNButton;
+    private javax.swing.JTextField resultTextField;
+    private javax.swing.JScrollPane saveNetPane;
+    private javax.swing.JTextArea saveNetTextArea;
+    private javax.swing.JDialog saveNetworkDialog;
     private javax.swing.JButton selectDataButton;
+    private javax.swing.JMenuItem useNNButton;
+    private javax.swing.JButton yesSaveButton;
     // End of variables declaration//GEN-END:variables
 
 }

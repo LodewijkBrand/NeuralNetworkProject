@@ -5,7 +5,7 @@
 
 import java.util.ArrayList;
 
-public class Neuron{
+public class Neuron implements java.io.Serializable{
     private ArrayList<Synapse> inputs;
     private Synapse output;
     private double myValue;
@@ -52,7 +52,7 @@ public class Neuron{
 
     /**
     * Gets the Synapse (edge) that goes out of this Neuron
-    * @return output The outgoing Syanpse
+    * @return output The outgoing Synapse
     */
     public Synapse getOutputSynapse(){
         return output;

@@ -6,17 +6,16 @@
 
 import java.util.ArrayList;
 
-public class NeuralNetwork{
+public class NeuralNetwork implements java.io.Serializable{
     private InputLayer myInput;
     private HiddenLayer myHidden;
     private OutputLayer myOutput;
-    private double LEARNING_RATE;
+    private boolean GA;
+    private final double LEARNING_RATE;
 
-    /**
-    * Empty constructor
-    */
-    public NeuralNetwork(double learnRate){
+    public NeuralNetwork(double learnRate, boolean isGA){
         LEARNING_RATE = learnRate;
+        GA = isGA;
     }
 
     /**
@@ -61,6 +60,15 @@ public class NeuralNetwork{
                 Synapse hiddenToOutput = new Synapse(hiddenNeuron, outputNeuron);
             }
         }
+    }
+    
+    public void initializeSample(Input sample){
+        ArrayList<Double> inputValues = sample.getInputs();
+        ArrayList<Neuron> inputNeurons = myInput.getNeurons();
+        for (int i = 0; i < inputNeurons.size() - 1; i++){
+            inputNeurons.get(i).setValue(inputValues.get(i));
+        }
+        
     }
 
     /**
@@ -144,5 +152,13 @@ public class NeuralNetwork{
     */
     public double getCalculatedValue(){
         return myOutput.get(0).getValue();
+    }
+    
+    public boolean getGA(){
+        return GA;
+    }
+    
+    public double getLR(){
+        return LEARNING_RATE;
     }
 }

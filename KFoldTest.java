@@ -12,30 +12,36 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class KFoldTest{
+public class KFoldTest implements java.io.Serializable{
     private ArrayList<IOTuple> myData;
     private int epochs;
-    private int currentEpoch;
-    private final double CONFIDENCE = .9; //95% accuracy
-    private final int NUM_FOLDS = 10;
-    private double confLevel;
-    private double learnRate;
-    javax.swing.JProgressBar progressBar;
+    private double avgConfLevel;
+    private double bestConf;
+    private NeuralNetwork bestNet;    
+    private boolean GA;
+    private final double CONFIDENCE = .95; //95% accuracy
+    private final int NUM_FOLDS = 2; 
+    private final double learnRate;
+
     
     // GA will be used to select the genetic algorithm or normal NN
-    public KFoldTest(ArrayList<IOTuple> data, int numEpochs, boolean GA, double LR){
+    public KFoldTest(ArrayList<IOTuple> data, int numEpochs, boolean isGA, double LR){
         epochs = numEpochs;
         myData = data; 
         learnRate = LR;
         Collections.shuffle(myData);
+        GA = isGA;
         kFold();
     }
     
     private void kFold(){
         int numInTestSet = (int)(myData.size()/NUM_FOLDS);
+        double confLevel;
+        
+        bestConf = 0.0;
         
         for (int i = 0; i < NUM_FOLDS; i++){
-            NeuralNetwork currentNN = new NeuralNetwork(learnRate);
+            NeuralNetwork currentNN = new NeuralNetwork(learnRate,GA);
             
             currentNN.initialize(myData.get(0)); //Initialize the NeuralNetwork with a piece of data. (This will be changed later)
             
@@ -52,7 +58,6 @@ public class KFoldTest{
                     currentNN.newIO(trainingIO);
                     currentNN.feedForward();
                     currentNN.backProp();
-                    currentEpoch = j;
                 }
             }
             
@@ -74,16 +79,27 @@ public class KFoldTest{
                 }
             }
             
-        //    System.out.println("Fold " + (i+1) + ", has a mean SSE of: " + sumSquaredError/(double)testSet.size());
+        //  System.out.println("Fold " + (i+1) + ", has a mean SSE of: " + sumSquaredError/(double)testSet.size());
             confLevel = (100.0 * (double)numRight/(double)testSet.size());
+            avgConfLevel += confLevel;
+            if (confLevel > bestConf){
+                bestConf = confLevel;
+                bestNet = currentNN;
+            }
             System.out.println("The NeuralNetwork had a 95% confidence level " + confLevel + "% of the time.");
         }
+        avgConfLevel = avgConfLevel/NUM_FOLDS;
     }
-    public double getConfLevel(){
-        return confLevel;
+    public double getAvgConfLevel(){
+        return avgConfLevel;
     }
     
-    public int getProgress() {
-        return (int)(currentEpoch / epochs * 100);
+    public double getBestConfLevel(){
+        return bestConf;
     }
+    
+    public NeuralNetwork getBestNN(){
+        return bestNet;
+    }
+    
 }

@@ -12,24 +12,31 @@
 import java.util.ArrayList;
 import java.io.*;
 
-public class Driver{
-    KFoldTest myTest;
-    int EPOCHS;
-    
+public class Driver implements java.io.Serializable{
+    private KFoldTest myTest;
+    private int EPOCHS;
+    private boolean isGA;
+    private String fileName;
+    private String delimiter;
+    private Parser myParser;
+    private double sampleOutput;
     // delim holds either Tab or Comma, and GA will be used to determine type of NN
-    public Driver (String fileName, String delim, boolean GA, double LR){
+    public Driver (String file, String delim, boolean GA){
+        
+        isGA = GA;
+        fileName = file;
+        
+        // Set delimiter
+        if (delim == "Tab"){delimiter = "\t";}
+        else {delimiter = ",";}
+        
+        myParser = new Parser(fileName, delimiter);
+    }
+    
+    // Driver will then pass information to KFoldTest and train the network
+    public void trainNetwork(double LR){
+
         ArrayList<IOTuple> inputOutputTuples;
-        String delimiter;
-        
-        if (delim == "Tab"){
-            delimiter = "\t";
-        }
-        else {
-            delimiter = ",";
-        }
-        
-        Parser test = new Parser(fileName, delimiter);
-        
         try{
             InputStream file = new FileInputStream("myData.ser");
             InputStream buffer = new BufferedInputStream(file);
@@ -38,16 +45,38 @@ public class Driver{
 
             EPOCHS = 500;
             
-            myTest = new KFoldTest(inputOutputTuples, EPOCHS, GA, LR);
+            myTest = new KFoldTest(inputOutputTuples, EPOCHS, isGA, LR);
         }
         catch(ClassNotFoundException ex){System.out.println("The class wasn't found!");}
         catch(IOException ex){System.out.println("There was an error!");}
+    }
+    
+    // Driver will read and evaluate a new set of inputs with the network
+    public void testSample(String testFile, String delimit){
+        // Set delimit
+        if (delimit == "Tab"){delimit = "\t";}
+        else {delimit = ",";}
+        // Retrieve the best network from KFoldTest
+        NeuralNetwork bestNN = myTest.getBestNN();
+        
+        // Parse data file of the sample (No output, one input)
+        myParser.parseCheck(testFile, delimit);
+        
+        // Test this data with the stored network
+        bestNN.initializeSample(myParser.getSampleInput());
+        bestNN.feedForward();
+        
+        // Save the output from this sample
+        sampleOutput = bestNN.getCalculatedValue();
     }
     
     public KFoldTest getKFoldTest(){
         return myTest;
     }
     
+    public double getSampleOutput(){
+        return sampleOutput;
+    }
 }
 
 //Testing Materials
